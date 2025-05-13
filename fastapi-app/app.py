@@ -3,12 +3,15 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict
 import os, json, requests, concurrent.futures, logging, re
-
+from dotenv import load_dotenv, find_dotenv
+import os
 app = FastAPI()
 log = logging.getLogger("uvicorn.error")
+load_dotenv(find_dotenv())
+
 
 # ─── OpenAI 설정 ──────────────────────────────────────────────────────
-OPENAI_KEY = "example"
+OPENAI_KEY = OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 HEADERS = {"Authorization": f"Bearer {OPENAI_KEY}",
            "Content-Type": "application/json"}
 MODEL = "gpt-4o-mini"
