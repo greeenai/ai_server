@@ -1,0 +1,11 @@
+*.gz
+*.safetensors
+.bash_history
+.bash_logout
+.bash_profile
+.bashrc
+.gitconfig
+.lesshst
+.python_history
+.viminfo
+.wget-hsts
