@@ -11,7 +11,7 @@ load_dotenv(find_dotenv())
 
 
 # ─── OpenAI 설정 ──────────────────────────────────────────────────────
-OPENAI_KEY = OPENAI_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 HEADERS = {"Authorization": f"Bearer {OPENAI_KEY}",
            "Content-Type": "application/json"}
 MODEL = "gpt-4o-mini"
