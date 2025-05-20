@@ -10,3 +10,4 @@
 .viminfo
 .wget-hsts
 .env
+*.pyc
