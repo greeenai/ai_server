@@ -75,10 +75,57 @@ def call_gpt_with_image(url: str) -> Dict:
         data["prompt"] = data.pop("question")
     return data
 
+
 # ─── Pydantic 모델 ───────────────────────────────────────────────────
 class ImagesRequest(BaseModel):
     image_urls: List[str]
+    
+class DiaryEntry(BaseModel):
+    title: str
+    caption: str
+    question: str
+    answer: str  
 
+class DiaryRequest(BaseModel):
+    entries: List[DiaryEntry]
+    
+    
+def call_gpt_diary(entries: List[DiaryEntry]) -> str:
+    diary_prompt = (
+    "당신은 감정 저널링을 돕는 에세이 작가입니다. "
+    "다음 JSON 배열에는 사용자가 오늘 찍은 사진마다 ⓐtitle(키워드), ⓑcaption(묘사), "
+    "ⓒquestion(질문), ⓓanswer(사용자가 고른 객관식 답변)이 들어 있습니다. "
+    "\n\n"
+    "🖋️ **목표**\n"
+    "  • 각 항목의 question-answer 쌍과 caption 속 디테일을 엮어, 사용자의 하루를 되짚는 4-5줄짜리 일기를 작성하세요.\n"
+    "  • 하루 전체를 하나의 흐름으로 연결하되, 사진 간 전환은 자연스러운 접속사나 시간순 서술로 이어주세요.\n"
+    "  • 시각·청각·후각 등 감각 묘사를 한두 군데 넣어 생동감을 주고, 사용자의 내면 감정(why)에 짧게 반추하세요.\n"
+    "  • 글 사이에 2-3개의 이모지를 적절히 섞어 감정을 드러내되, 과도하게 사용하지 마세요.\n"
+    "\n"
+    "🚫 **형식 규칙**\n"
+    "  • 번호, 따옴표, 리스트, 헤더, 마크다운은 쓰지 마세요. 순수 서술형 단락만 작성합니다.\n"
+    "  • 출력은 **일기 본문 텍스트만** 반환하고, 그 외 설명·주석·코드블록은 포함하지 마세요.\n"
+)   
+
+    photos_json = json.dumps([e.dict() for e in entries], ensure_ascii=False, indent=2)
+
+    payload = {
+        "model": MODEL,
+        "messages": [
+            {"role": "user", "content": diary_prompt},
+            {"role": "user", "content": f"[사진 기록]\n{photos_json}"}
+        ],
+        "max_tokens": 400,
+        "response_format": {"type": "text"}
+    }
+
+    r = requests.post("https://api.openai.com/v1/chat/completions",
+                      headers=HEADERS, json=payload, timeout=120)
+    r.raise_for_status()
+    return r.json()["choices"][0]["message"]["content"].strip()
+
+
+    
 # ─── 엔드포인트 ──────────────────────────────────────────────────────
 @app.post("/generate-question")
 def generate_questions(req: ImagesRequest):
@@ -99,6 +146,15 @@ def generate_questions(req: ImagesRequest):
                 raise HTTPException(502, f"{req.image_urls[idx]} → {e}")
 
     return {"questions": questions}
+
+@app.post("/generate-diary")
+def generate_diary(req: DiaryRequest):
+    try:
+        diary = call_gpt_diary(req.entries)
+    except Exception as e:
+        log.error("Diary generation error: %s", e)
+        raise HTTPException(502, str(e))
+    return {"diary": diary}
 
 @app.get("/health")
 def health():
