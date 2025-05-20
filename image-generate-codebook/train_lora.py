@@ -1,10 +1,10 @@
 """
-
+train_lora.py
 Stable Diffusion XL 모델을 위한 LoRA 기반 text-to-image finetuning train 코드입니다.
 
 1. 학습 실행 명령어 - 자신의 환경에 맞게 경로를 수정이 필요합니다.
 accelerate launch --mixed_precision fp16 \
-  examples/dreambooth/train_dreambooth_lora_sdxl.py \
+  train_lora.py \
   --pretrained_model_name_or_path stabilityai/stable-diffusion-xl-base-1.0 \
   --instance_data_dir "${INSTANCE_DIR}" 
   --instance_prompt  "${STYLE_TOKEN}" \
